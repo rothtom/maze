@@ -72,6 +72,8 @@ i = 0
 while os.path.isfile("".join(["maze/recursive/", str(i + 1), ".csv"])):
     i += 1
 
+# i = 2
+# possibility to show specific image
 with open(f"maze/recursive/{i}.csv", "r") as f:
     reader = csv.DictReader(f)
     for row in reader:

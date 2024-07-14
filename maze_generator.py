@@ -7,8 +7,10 @@ SIZEX = None
 SIZEY = None
 n = 0
 DIRECTIONS = ["n", "e", "s", "w"]
+TARGET = [-1, -1]
+# chance mazes target
 class Cell():
-    def __init__(self, x, y):
+    def __init__(self, x, y, target=False):
         self.wall = {"n": False, 
                      "e": False, 
                      "s": False, 
@@ -16,6 +18,7 @@ class Cell():
         self.empty = True
         self.x = x
         self.y = y
+        self.target = target
     def build_walls(self, entrypoint=None):
         for key in self.wall.keys():
             self.wall[key] = True
@@ -75,8 +78,10 @@ def main():
     if algorythm == "recursive":
         maze = recursive_init(maze)
         return 0
+    maze[TARGET[0]][TARGET[1]].target = True
     
 def recursive_init(maze):
+    global n
     n = 0
     maze[0][0].build_walls()
     save(maze, maze[0][0], n)
@@ -86,18 +91,19 @@ def recursive_init(maze):
     
 
 def recursive(maze, current_cell, reverse=None):
-    availabel_neighbors = get_neighbors(maze, current_cell)
-    while len(availabel_neighbors) != 0:
-        cell = random.choice(availabel_neighbors)
-        availabel_neighbors.remove(cell)
-        if cell.empty:
-            direction = get_direction(start=cell, end=current_cell)
-            cell.build_walls(entrypoint=(opposite_direction(direction)))
-            current_cell.breakdown_wall(direction)
-            global n
-            save(maze, cell, n)
-            n += 1
-            recursive(maze, cell)
+    if not current_cell.target:
+        availabel_neighbors = get_neighbors(maze, current_cell)
+        while len(availabel_neighbors) != 0:
+            cell = random.choice(availabel_neighbors)
+            availabel_neighbors.remove(cell)
+            if cell.empty:
+                direction = get_direction(start=current_cell, end=cell)
+                cell.build_walls(entrypoint=(opposite_direction(direction)))
+                current_cell.breakdown_wall(direction)
+                global n
+                save(maze, cell, n)
+                n += 1
+                recursive(maze, cell)
     reverse_directions = current_cell.get_empty_walls()
     if reverse != None:
         if reverse in reverse_directions:
@@ -126,9 +132,9 @@ def get_direction(start, end):
     elif start.x > end.x:
         return "w"
     elif start.y < end.y:
-        return "n"
-    else:
         return "s"
+    else:
+        return "n"
 
 def opposite_direction(d):
     if d == "n":
