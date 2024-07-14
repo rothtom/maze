@@ -3,8 +3,8 @@ import re
 import random
 import csv
 
-global SIZEX
-global SIZEY
+SIZEX = None
+SIZEY = None
 n = 0
 DIRECTIONS = ["n", "e", "s", "w"]
 class Cell():
@@ -42,9 +42,11 @@ def main():
     if re.search(r"^python3? mazegenerator\.py .+ [0-9]+ [0-9]*", "".join(sys.argv)):
         sys.exit(USAGE)
     try:
+        global SIZEX
         SIZEX = int(sys.argv[4])
     except TypeError:
         sys.exit("Maze size must be an integer")
+    global SIZEY
     if len(sys.argv) < 5:
         SIZEY = SIZEX
     else:
@@ -73,6 +75,7 @@ def recursive_init(maze):
     
 
 def recursive(maze, current_cell, reverse=None):
+    global n
     save(maze, current_cell, n)
     n += 1
     availabel_neighbors = get_neighbors(maze, current_cell)
@@ -132,10 +135,12 @@ def save(maze, current_cell, n):
         fieldnames = ["x", "y", "wall_n", "wall_e", "wall_s", "wall_w", "empty", "current"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
-        for i in range(SIZEX):
-            for j in range(SIZEY):
+        for j in range(SIZEX):
+            for i in range(SIZEY):
                 if maze[i][j] == current_cell:
                     current = True
+                else:
+                    current = False
                 writer.writerow({
                     "x": maze[i][j].x,
                     "y": maze[i][j].y,
