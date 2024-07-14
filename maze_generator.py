@@ -59,7 +59,7 @@ def main():
     algorythm = clas[1]
     
     #save maze data to csv
-    with open("maze/mazedata.csv", "w") as df:
+    with open(f"maze/{algorythm}/mazedata.csv", "w") as df:
         fieldnames = ["SIZEX", "SIZEY"]
         writer = csv.DictWriter(df, fieldnames=fieldnames)
         writer.writeheader()
@@ -144,7 +144,7 @@ def opposite_direction(d):
     
 
 def save(maze, current_cell, n):
-    with open(f"maze/{n}.csv", "w") as f:
+    with open(f"maze/recursive/{n}.csv", "w") as f:
         fieldnames = ["x", "y", "wall_n", "wall_e", "wall_s", "wall_w", "empty", "current"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
