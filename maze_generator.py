@@ -16,11 +16,11 @@ class Cell():
         self.empty = True
         self.x = x
         self.y = y
-    def build(self, entrypoint=None):
+    def build_walls(self, entrypoint=None):
         for key in self.wall.keys():
             self.wall[key] = True
         self.empty = False
-        if not entrypoint:
+        if entrypoint:
             self.wall[entrypoint] = False
         return 0
     def breakdown_wall(self, *directions):
@@ -30,20 +30,22 @@ class Cell():
     def get_empty_walls(self):
         empty_walls = []
         for d in DIRECTIONS:
-            if self.wall == False:
+            if self.wall[d] == False:
                 empty_walls.append(d)
+        return empty_walls
 
 
 def main():
     USAGE = "Usage: python3 maze_generator.py {generation algorythm} {maze size (1 number if square)}"
-    if len(sys.argv) not in  [5, 6]:
-        sys.exit(USAGE)
-    print("passed")
-    if re.search(r"^python3? mazegenerator\.py .+ [0-9]+ [0-9]*", "".join(sys.argv)):
-        sys.exit(USAGE)
+    clas = re.split(r".* python3?", " ".join(sys.argv))
+    clas = clas[-1].split()
+    if len(clas) not in  [3, 4]:
+        sys.exit(USAGE + "1")
+    if re.search(r"^python3? mazegenerator\.py .+ [0-9]+ [0-9]*", " ".join(clas)):
+        sys.exit(USAGE + "2")
     try:
         global SIZEX
-        SIZEX = int(sys.argv[4])
+        SIZEX = int(clas[2])
     except TypeError:
         sys.exit("Maze size must be an integer")
     global SIZEY
@@ -51,10 +53,17 @@ def main():
         SIZEY = SIZEX
     else:
         try:
-            SIZEY = int(sys.argv[5])
+            SIZEY = int(clas[3])
         except TypeError:
             sys.exit("Maze size must be an integer")
-    algorythm = sys.argv[3]
+    algorythm = clas[1]
+    
+    #save maze data to csv
+    with open("maze/mazedata.csv", "w") as df:
+        fieldnames = ["SIZEX", "SIZEY"]
+        writer = csv.DictWriter(df, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerow({"SIZEX": SIZEX, "SIZEY": SIZEY})
     
     # initialize empty maze with goven size
     maze = list()
@@ -64,46 +73,50 @@ def main():
             maze[i].append([])
             maze[i][j] = Cell(i, j)
     if algorythm == "recursive":
-        recursive_init(maze)
+        maze = recursive_init(maze)
+        return 0
     
 def recursive_init(maze):
     n = 0
-    maze[0][0].build()
+    maze[0][0].build_walls()
     save(maze, maze[0][0], n)
     n += 1
-    recursive(maze, maze[0][0])
+    maze = recursive(maze, maze[0][0])
+    return maze
     
 
 def recursive(maze, current_cell, reverse=None):
-    global n
-    save(maze, current_cell, n)
-    n += 1
     availabel_neighbors = get_neighbors(maze, current_cell)
     while len(availabel_neighbors) != 0:
         cell = random.choice(availabel_neighbors)
         availabel_neighbors.remove(cell)
         if cell.empty:
-            direction = get_direction(start=current_cell, end=cell)
-            cell.build(entrypoint=opposite_direction(direction))
+            direction = get_direction(start=cell, end=current_cell)
+            cell.build_walls(entrypoint=(opposite_direction(direction)))
             current_cell.breakdown_wall(direction)
+            global n
+            save(maze, cell, n)
+            n += 1
             recursive(maze, cell)
     reverse_directions = current_cell.get_empty_walls()
     if reverse != None:
         if reverse in reverse_directions:
             reverse_directions.remove(reverse)
-    recursive(maze, current_cell, revers=reverse_directions[0])
+    if len(reverse_directions) == 0:
+        return maze
+    recursive(maze, cell, reverse=reverse_directions[0])
 
 def get_neighbors(maze, c):
     # c beeing the cell whos neighbors we observe
     neighbors = []
     if c.x != 0:
-        neighbors.append(maze[c.x-2][c.y-1])
-    if c.x != SIZEX:
-        neighbors.append(maze[c.x][c.y-1])
-    if c.y != 0:
-        neighbors.append(maze[c.x-1][c.y-2])
-    if c.y != SIZEY:
         neighbors.append(maze[c.x-1][c.y])
+    if c.x != SIZEX - 1:
+        neighbors.append(maze[c.x+1][c.y])
+    if c.y != 0:
+        neighbors.append(maze[c.x][c.y-1])
+    if c.y != SIZEY - 1:
+        neighbors.append(maze[c.x][c.y+1])
     return neighbors
 
 
