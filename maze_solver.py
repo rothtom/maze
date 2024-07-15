@@ -1,7 +1,7 @@
 import sys
 import re
-
-from maze_generator import DIRECTIONS
+import maze_generator as mg
+from maze_generator import Cell, DIRECTIONS
 from visualizer import load_maze
 
 def main():
@@ -19,12 +19,14 @@ def right_hand(maze):
     cell = maze[0][0]
     path = []
     path.append(cell)
+    cell = mg.get_cell_from_direction(cell.get_empty_walls[0])
     while True:
-        possible_ways = get_possible_ways(cell)
+        possible_ways = cell.get_empty_walls()
+        possible_ways.remove(entrypoint)
+        index = DIRECTIONS.index(entrypoint)
+
         path.append(cell)
 
-
-def get_possible_ways(cell):
 
 
 if __name__ == "__main__":

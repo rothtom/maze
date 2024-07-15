@@ -12,10 +12,11 @@ SIZEX = None
 SIZEY = None
 n = 0
 DIRECTIONS = ["n", "e", "s", "w"]
+START = [0, 0]
 TARGET = [-1, -1]
 # chance mazes target
 class Cell():
-    def __init__(self, x, y, target=False):
+    def __init__(self, x, y, target=False, start=False):
         self.wall = {"n": False, 
                      "e": False, 
                      "s": False, 
@@ -24,6 +25,7 @@ class Cell():
         self.x = x
         self.y = y
         self.target = target
+        self.start = start
     def build_walls(self, entrypoint=None):
         for key in self.wall.keys():
             self.wall[key] = True
@@ -92,6 +94,7 @@ def main():
         for j in range(SIZEY):
             maze[i].append([])
             maze[i][j] = Cell(i, j)
+    maze[START[0]][START[1]].start = True
     maze[TARGET[0]][TARGET[1]].target = True
     if algorythm == "recursive":
         maze = recursive_init(maze)
@@ -108,15 +111,17 @@ def recursive_init(maze):
     
 
 def recursive(maze, current_cell, reverse=None):
-    if current_cell.target:
-        entrypoint = current_cell.get_empty_walls()[0]
-        cell_cords = current_cell.get_cell_in_direction(entrypoint)
-        cell = maze[cell_cords[0]][cell_cords[1]]
-        for neighbor in get_neighbors(maze, current_cell):
-            if neighbor.empty:
-                recursive(maze, cell, reverse=entrypoint)
-        return maze
-    
+    if current_cell.target or current_cell.start:
+        try:
+            entrypoint = current_cell.get_empty_walls()[0]
+            cell_cords = current_cell.get_cell_in_direction(entrypoint)
+            cell = maze[cell_cords[0]][cell_cords[1]]
+            for neighbor in get_neighbors(maze, current_cell):
+                if neighbor.empty:
+                    recursive(maze, cell, reverse=entrypoint)
+            return maze
+        except IndexError:
+            pass
     availabel_neighbors = get_neighbors(maze, current_cell)
     while len(availabel_neighbors) != 0:
         cell = random.choice(availabel_neighbors)
@@ -176,7 +181,7 @@ def opposite_direction(d):
 
 def save(maze, current_cell, n):
     with open(f"maze/recursive/{n}.csv", "w") as f:
-        fieldnames = ["x", "y", "wall_n", "wall_e", "wall_s", "wall_w", "empty", "current", "target"]
+        fieldnames = ["x", "y", "wall_n", "wall_e", "wall_s", "wall_w", "empty", "current",  "start", "target",]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         for j in range(SIZEX):
@@ -194,6 +199,7 @@ def save(maze, current_cell, n):
                     "wall_w": maze[i][j].wall["w"],
                     "empty": maze[i][j].empty,
                     "current": current,
+                    "start": maze[i][j].start,
                     "target": maze[i][j].target,
                 })
     return 0
