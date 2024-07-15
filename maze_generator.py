@@ -2,6 +2,11 @@ import sys
 import re
 import random
 import csv
+import shutil
+import os
+
+sys.setrecursionlimit(100000)
+# set max recursion depth
 
 SIZEX = None
 SIZEY = None
@@ -36,6 +41,10 @@ class Cell():
             if self.wall[d] == False:
                 empty_walls.append(d)
         return empty_walls
+    def get_cell_in_direction(self, direction):
+        offsets = {"n": (0, -1), "e": (1, 0), "s": (0, 1), "w": (-1, 0)}
+        offset = offsets[direction]
+        return [self.x + offset[0], self.y + offset[1]]
 
 
 def main():
@@ -61,24 +70,32 @@ def main():
             sys.exit("Maze size must be an integer")
     algorythm = clas[1]
     
-    #save maze data to csv
+    # clear previous maze from folder
+    try:
+        shutil.rmtree(f"./maze/{algorythm}")
+    except FileNotFoundError:
+        pass
+
+    # create the folder for the new maze to store
+    os.mkdir(f"./maze/{algorythm}")
+    # save maze data to csv
     with open(f"maze/{algorythm}/mazedata.csv", "w") as df:
         fieldnames = ["SIZEX", "SIZEY"]
         writer = csv.DictWriter(df, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerow({"SIZEX": SIZEX, "SIZEY": SIZEY})
-    
-    # initialize empty maze with goven size
+
+    # initialize empty maze with given size
     maze = list()
     for i in range(SIZEX):
         maze.append([])
         for j in range(SIZEY):
             maze[i].append([])
             maze[i][j] = Cell(i, j)
+    maze[TARGET[0]][TARGET[1]].target = True
     if algorythm == "recursive":
         maze = recursive_init(maze)
         return 0
-    maze[TARGET[0]][TARGET[1]].target = True
     
 def recursive_init(maze):
     global n
@@ -91,19 +108,27 @@ def recursive_init(maze):
     
 
 def recursive(maze, current_cell, reverse=None):
-    if not current_cell.target:
-        availabel_neighbors = get_neighbors(maze, current_cell)
-        while len(availabel_neighbors) != 0:
-            cell = random.choice(availabel_neighbors)
-            availabel_neighbors.remove(cell)
-            if cell.empty:
-                direction = get_direction(start=current_cell, end=cell)
-                cell.build_walls(entrypoint=(opposite_direction(direction)))
-                current_cell.breakdown_wall(direction)
-                global n
-                save(maze, cell, n)
-                n += 1
-                recursive(maze, cell)
+    if current_cell.target:
+        entrypoint = current_cell.get_empty_walls()[0]
+        cell_cords = current_cell.get_cell_in_direction(entrypoint)
+        cell = maze[cell_cords[0]][cell_cords[1]]
+        for neighbor in get_neighbors(maze, current_cell):
+            if neighbor.empty:
+                recursive(maze, cell, reverse=entrypoint)
+        return maze
+    
+    availabel_neighbors = get_neighbors(maze, current_cell)
+    while len(availabel_neighbors) != 0:
+        cell = random.choice(availabel_neighbors)
+        availabel_neighbors.remove(cell)
+        if cell.empty:
+            direction = get_direction(start=current_cell, end=cell)
+            cell.build_walls(entrypoint=(opposite_direction(direction)))
+            current_cell.breakdown_wall(direction)
+            global n
+            save(maze, cell, n)
+            n += 1
+            recursive(maze, cell)
     reverse_directions = current_cell.get_empty_walls()
     if reverse != None:
         if reverse in reverse_directions:
@@ -151,7 +176,7 @@ def opposite_direction(d):
 
 def save(maze, current_cell, n):
     with open(f"maze/recursive/{n}.csv", "w") as f:
-        fieldnames = ["x", "y", "wall_n", "wall_e", "wall_s", "wall_w", "empty", "current"]
+        fieldnames = ["x", "y", "wall_n", "wall_e", "wall_s", "wall_w", "empty", "current", "target"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         for j in range(SIZEX):
@@ -169,6 +194,7 @@ def save(maze, current_cell, n):
                     "wall_w": maze[i][j].wall["w"],
                     "empty": maze[i][j].empty,
                     "current": current,
+                    "target": maze[i][j].target,
                 })
     return 0
 
