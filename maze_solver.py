@@ -13,17 +13,30 @@ def main():
 
     maze = load_maze()
     if clas[-1] == "right_hand":
-        path = right_hand()
+        path = right_hand(maze)
 
 def right_hand(maze):
     cell = maze[0][0]
     path = []
     path.append(cell)
-    cell = mg.get_cell_from_direction(cell.get_empty_walls[0])
+    exitpoint = cell.get_empty_walls()[0]
+    cell_cords = cell.get_cell_in_direction(exitpoint)
+    cell = maze[cell_cords[0]][cell_cords[1]]
+    entrypoint = mg.opposite_direction(exitpoint)
     while True:
         possible_ways = cell.get_empty_walls()
-        possible_ways.remove(entrypoint)
         index = DIRECTIONS.index(entrypoint)
+        for i in range(len(DIRECTIONS)):
+            exitpoint = DIRECTIONS[index - i]
+            if exitpoint in possible_ways:
+                cell_cords = cell.get_cell_in_direction(exitpoint)
+                cell = maze[cell_cords[0]][cell_cords[1]]
+                entrypoint = mg.opposite_direction(exitpoint)
+                path.append(cell)
+        print(cell.x, cell.y)
+        if cell.target:
+            print(path)
+            return path
 
         path.append(cell)
 
