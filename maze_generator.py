@@ -8,8 +8,7 @@ import os
 sys.setrecursionlimit(100000)
 # set max recursion depth
 
-SIZEX = None
-SIZEY = None
+
 n = 0
 DIRECTIONS = ["n", "e", "s", "w"]
 START = [0, 0]
@@ -82,10 +81,10 @@ def main():
     os.mkdir(f"./maze/{algorythm}")
     # save maze data to csv
     with open(f"maze/{algorythm}/mazedata.csv", "w") as df:
-        fieldnames = ["SIZEX", "SIZEY"]
+        fieldnames = ["SIZEX", "SIZEY", "TARGETX", "TARGETY", "STARTX", "STARTY"]
         writer = csv.DictWriter(df, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerow({"SIZEX": SIZEX, "SIZEY": SIZEY})
+        writer.writerow({"SIZEX": SIZEX, "SIZEY": SIZEY, "TARGETX": TARGET[0], "TARGETY": TARGET[1], "STARTX": START[0], "STARTY": START[1]})
 
     # initialize empty maze with given size
     maze = list()
