@@ -98,6 +98,8 @@ def main():
     if algorythm == "recursive":
         maze = recursive_init(maze)
         return 0
+    else:
+        sys.exit("invalid generation algorythm")
     
 def recursive_init(maze):
     global n
@@ -141,16 +143,21 @@ def recursive(maze, current_cell, reverse=None):
         return maze
     recursive(maze, cell, reverse=reverse_directions[0])
 
-def get_neighbors(maze, c):
+def get_neighbors(maze, c, sizey=None, sizex=None):
     # c beeing the cell whos neighbors we observe
+    try:
+        sizey = SIZEY
+        sizex = SIZEX
+    except NameError:
+        pass
     neighbors = []
     if c.x != 0:
         neighbors.append(maze[c.x-1][c.y])
-    if c.x != SIZEX - 1:
+    if c.x != sizex - 1:
         neighbors.append(maze[c.x+1][c.y])
     if c.y != 0:
         neighbors.append(maze[c.x][c.y-1])
-    if c.y != SIZEY - 1:
+    if c.y != sizey - 1:
         neighbors.append(maze[c.x][c.y+1])
     return neighbors
 

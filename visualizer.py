@@ -52,7 +52,7 @@ class Cell(Cell):
         cell = pg.Rect(self.x * TILE[0] + TILE[0] * 0.1, self.y * TILE[1] + TILE[1] * 0.1, TILE[0] * 0.8, TILE[1] * 0.8)
         pg.draw.rect(screen, "pink", cell)
         self.explored = True
-        
+
     def unmark(self):
         self.explored = False
 
@@ -65,10 +65,15 @@ def main():
     global TILE
     TILE = (WIDTH/SIZEX, HEIGHT/SIZEY)
     path = []
-    with open(f"./maze/solution/{solving_algorythm}.csv") as f:
+    with open(f"./maze/solution/{solving_algorythm}_path.csv") as f:
         reader = csv.DictReader(f)
         for row in reader:
             path.append([int(row["x"]), int(row["y"])])
+    explored_cells = []
+    with open(f"./maze/solution/{solving_algorythm}_explored.csv") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            explored_cells.append([int(row["x"]), int(row["y"])])
 
     path_step = 0
     path_length = len(path)
@@ -84,14 +89,16 @@ def main():
                     if path_step > 0:
                         path_step -= 1
                         maze[path[path_step][0]][path[path_step][1]].unmark()
-            for i in range(SIZEX):
-                for j in range(SIZEY):
-                    maze[i][j].pixel_cell()
+            if path_step == path_length - 1:
+                print("Hey!")
+        for i in range(SIZEX):
+            for j in range(SIZEY):
+                maze[i][j].pixel_cell()
 
-            maze[path[path_step][0]][path[path_step][1]].mark()
+        maze[path[path_step][0]][path[path_step][1]].mark()
                 
-            pg.display.flip()
-            clock.tick(60)
+        pg.display.flip()
+        clock.tick(60)
 
 def load_maze():
     #open data file
@@ -120,6 +127,7 @@ def load_maze():
         for row in reader:
             maze[int(row["x"])][int(row["y"])] = Cell(row["x"], row["y"], row["wall_n"], row["wall_e"], row["wall_s"], row["wall_w"], row["target"])
     return maze
+
 
 if __name__ == "__main__":
     main()

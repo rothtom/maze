@@ -2,6 +2,7 @@ import sys
 import re
 import csv
 import math
+import copy
 import maze_generator as mg
 from maze_generator import Cell, DIRECTIONS
 from visualizer import load_maze
@@ -12,10 +13,11 @@ class AStarCell(Cell):
         self.x = cell.x
         self.y = cell.y
         self.target = cell.target
-        self.manhattan_distance = manhattan_distance(self, target)
+        self.manhattan_distance = manhattan_distance(self, maze[target[0]][target[1]])
         self.path_cost = None
         self.cost = None
         self.explored = False
+        self.parent = None
     
     def calculate_cost(self):
         self.cost = self.manhattan_distance + self.path_cost
@@ -36,7 +38,6 @@ def main():
     maze = load_maze()
     global target
     target = [int(mazedata["TARGETX"]), int(mazedata["TARGETY"])]
-    target = maze[int(target[0])][int(target[1])]
     global SIZEX
     SIZEX = int(mazedata["SIZEX"])
     global SIZEY
@@ -51,18 +52,27 @@ def main():
     algorythm = clas[-1]
     if algorythm == "right_hand":
         path = right_hand(maze)
+        explored_cells = path
     elif algorythm == "a_star":
-        path = a_star(maze)
+        explored_cells, path = a_star(maze)
     else:
         sys.exit("Invalid solving algorythm")
     
-    with open(f"./maze/solution/{clas[-1]}.csv", "w") as f:
+    with open(f"./maze/solution/{clas[-1]}_path.csv", "w") as f:
         writer = csv.DictWriter(f, fieldnames=["x", "y"])
         writer.writeheader()
         for cell in path:
             writer.writerow({"x": cell[0],
                              "y": cell[1],
                              })
+            
+    with open(f"./maze/solution/{clas[-1]}_explored.csv", "w") as f:
+        writer = csv.DictWriter(f, fieldnames=["x", "y"])
+        writer.writeheader()
+        for cell in explored_cells:
+            writer.writerow({"x": cell[0],
+                             "y": cell[1],
+                            })
         
     
 
@@ -104,40 +114,47 @@ def a_star(maze):
         for j in range(len(maze[i])):
             maze[i][j] = AStarCell(maze[i][j])
     cell = maze[0][0]
-    cell.path_cost = 0
+    cell.path_cost = 10
     cell.calculate_cost()
-    path = []
-    while cell.target == False:
-        directions = cell.get_empty_walls()
-        neighbors = []
-        for direction in directions:
-            cords = cell.get_cell_in_direction((direction))
-            neighbors.append(maze[cords[0]][cords[1]])
-        for neighbor in neighbors:
-            neighbor.path_cost = cell.path_cost + 10
-            neighbor.calculate_cost()
-        lowest_path_cost = int(((int(mazedata["SIZEX"])) * int(mazedata["SIZEY"])) + 1) * 10
-        for i in range(len(maze)):
-            for j in range(len(maze[i])):
-                if maze[i][j].cost != None and maze[i][j].explored == False:
-                    if maze[i][j].cost < lowest_path_cost:
-                        best_cell = maze[i][j]
-                        lowest_path_cost = best_cell.cost
-        cell = best_cell
+    explored_cells = [[cell.x, cell.y]]
+    considered_cells = [cell]
+    while cell.target == False and len(considered_cells) > 0:
+        cell = sorted(considered_cells, key=lambda x: x.cost, reverse=False)[0]
+        considered_cells.remove(cell)
         cell.explored = True
+        for direction in cell.get_empty_walls():
+            neighbor_cords = cell.get_cell_in_direction(direction)
+            neighbor = maze[neighbor_cords[0]][neighbor_cords[1]]
+            if neighbor.path_cost != None:
+                if cell.path_cost > neighbor.path_cost:
+                    continue
+            else:
+                neighbor.path_cost = cell.path_cost + 10
+                neighbor.calculate_cost()
+                neighbor.parent = cell
+                considered_cells.append(neighbor)
+        explored_cells.append([cell.x, cell.y])
+
+    cell = maze[target[0]][target[1]]
+    path = [[cell.x, cell.y]]
+    while cell.parent != None:
+        cell = cell.parent
         path.append([cell.x, cell.y])
-    return path
+    path.reverse()
+    return explored_cells, path
+
+    
 
 def manhattan_distance(cell, target):
-
     cost = [(target.x - cell.x), (target.y - cell.y)]
     if cost[0] < 0:
         cost[0] = cost[0] * -1
     if cost[1] < 0:
         cost[1] = cost[1] * - 1
-    if (cost[0] * cost[0]) + (cost[1] * cost[1]) == 0:
-        return 0
-    return (math.sqrt((cost[0] * cost[0]) + (cost[1] * cost[1]))) * 10
+    # if (cost[0] * cost[0]) + (cost[1] * cost[1]) == 0:
+        # return 0
+    # return (math.sqrt((cost[0] * cost[0]) + (cost[1] * cost[1]))) * 10
+    return (cost[0] + cost[1]) * 10
 
 
 
