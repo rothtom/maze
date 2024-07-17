@@ -18,9 +18,11 @@ class AStarCell(Cell):
         self.cost = None
         self.explored = False
         self.parent = None
+        self.dead_end = False
     
     def calculate_fcost(self):
         self.cost = self.manhattan_distance + self.path_cost
+
 
 def main():
     USAGE = "python3 maze_solver.py {solvong algorythm}"
@@ -57,6 +59,8 @@ def main():
         explored_cells, path = a_star(maze)
     elif algorythm == "dijkstras":
         explored_cells, path = dijkstras(maze)
+    elif algorythm == "dead_end_fill":
+        explored_cells, path = dead_end_fill(maze)
     else:
         sys.exit("Invalid solving algorythm")
     
@@ -207,6 +211,52 @@ def get_connected_cells(maze, cell):
         neighbor_cells.append(maze[cell_cords[0]][cell_cords[1]])
     return neighbor_cells
 
+def dead_end_fill(maze):
+    unvisited = []
+    dead_ends = []
+    for i in range(len(maze)):
+        for j in range(len(maze[i])):
+            maze[i][j] = AStarCell(maze[i][j])
+            unvisited.append(maze[i][j])
+            if len(maze[i][j].get_empty_walls()) == 1:
+                dead_ends.append(maze[i][j])
+                maze[i][j].dead_end = True
+    dead_ends.remove(maze[start[0]][start[1]])
+    dead_ends.remove(maze[target[0]][target[1]])
+
+    explored = []
+    while len(dead_ends) > 0:
+        cell = dead_ends[0]
+        dead_ends.remove(cell)
+        directions = cell.get_empty_walls()
+        for direction in directions:
+            neighbor_cords = cell.get_cell_in_direction(direction)
+            neighbor = maze[neighbor_cords[0]][neighbor_cords[1]]
+            options = len(neighbor.get_empty_walls())
+            for direction2 in neighbor.get_empty_walls():
+                neighbor2_cords = neighbor.get_cell_in_direction(direction2)
+                neighbor2 = maze[neighbor2_cords[0]][neighbor2_cords[1]]
+                if neighbor2.dead_end:
+                    options -= 1
+            if options == 1:
+                neighbor.dead_end = True
+                cell = neighbor  
+                if [cell.x, cell.y] not in explored:
+                    dead_ends.append(cell)
+                    explored.append([cell.x, cell.y])
+                    unvisited.remove(cell)
+
+            
+    cell = maze[start[0]][start[1]]
+    path = [[cell.x, cell.y]]
+    while cell.target == False:
+        for direction in cell.get_empty_walls():
+            neighbor_cords = cell.get_cell_in_direction(direction)
+            neighbor = maze[neighbor_cords[0]][neighbor_cords[1]]
+            if  neighbor in unvisited and [neighbor.x, neighbor.y] not in path:
+                path.append([cell.x, cell.y])
+                cell = neighbor
+    return explored, path
 
 
 
