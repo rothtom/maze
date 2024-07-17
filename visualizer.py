@@ -97,6 +97,7 @@ def main():
 
     path_step = 0
     path_length = len(path)
+    show_entire_path = False
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -111,9 +112,13 @@ def main():
                 elif event.key == pg.K_LEFT:
                     if path_step > 0:
                         path_step -= 1   
+                
+                elif event.key == pg.K_TAB:
+                    show_entire_path = show_entire_path == False
+                        
 
                 elif event.key == pg.K_SPACE:
-                    show_explored_cells = show_explored_cells != True
+                    show_explored_cells = show_explored_cells == False
             if path_step == path_length - 1:
                 pass
         for i in range(SIZEX):
@@ -121,10 +126,14 @@ def main():
                 maze[i][j].pixel_cell()
                 try:
                     cords = [maze[i][j].x, maze[i][j].y]
-                    if path.index(cords) < path_step:
-                        maze[i][j].show_path() 
+                    if not show_entire_path:
+                        if path.index(cords) < path_step:
+                            maze[i][j].show_path() 
+                        else:
+                            maze[i][j].hide_path()
                     else:
-                        maze[i][j].hide_path()
+                        for cords in path:
+                            maze[cords[0]][cords[1]].show_path()
                 except ValueError:
                     pass
         
