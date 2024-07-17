@@ -1,5 +1,6 @@
 import pygame as pg
 import os
+import sys
 import csv
 import copy
 from maze_generator import Cell
@@ -9,8 +10,8 @@ WIDTH= 1280
 HEIGHT = 720
 screen = pg.display.set_mode((WIDTH, HEIGHT))
 MAZETYPE = "recursive"
-solving_algorythm = "a_star"
-# decides which folder to use (load)
+# solving_algorythm = "a_star"
+# used to set default. Decides which folder to use (load). Can change this with clas
 SQUARE = False
 if SQUARE:
     HEIGHT = WIDTH
@@ -25,6 +26,7 @@ class Cell(Cell):
         self.x = int(x)
         self.y = int(y)
         self.target = target == "True"
+        self.is_path = False
         self.explored = False
 
     def pixel_cell(self):
@@ -40,23 +42,37 @@ class Cell(Cell):
             wall["w"] = pg.Rect(self.x * TILE[0], self.y * TILE[1], TILE[0] * 0.1, TILE[1])
         if self.target:
             pg.draw.rect(screen, "red", cell)
-        elif self.explored:
+        elif self.is_path:
             pg.draw.rect(screen, "blue", cell)
-        elif not self.explored:
+        elif not self.is_path:
             pg.draw.rect(screen, "black", cell)
+            if self.explored:
+                pg.draw.rect(screen, "orange", cell)
         for d in wall.keys():
             if wall[d]:
                 pg.draw.rect(screen, "green", wall[d])
 
-    def mark(self):
+    def show_path(self):
+        cell = pg.Rect(self.x * TILE[0] + TILE[0] * 0.1, self.y * TILE[1] + TILE[1] * 0.1, TILE[0] * 0.8, TILE[1] * 0.8)
+        self.is_path = True
+
+    def hide_path(self):
+        self.is_path = False
+
+    def mark_current(self):
         cell = pg.Rect(self.x * TILE[0] + TILE[0] * 0.1, self.y * TILE[1] + TILE[1] * 0.1, TILE[0] * 0.8, TILE[1] * 0.8)
         pg.draw.rect(screen, "pink", cell)
+    
+    def show_explored(self):
         self.explored = True
 
-    def unmark(self):
+    def hide_explored(self):
         self.explored = False
 
 def main():
+    if len(sys.argv) > 3:
+        sys.exit("invalid clas!")
+    solving_algorythm = sys.argv[1]
     pg.init()
     clock = pg.time.Clock()
     running = True
@@ -69,11 +85,15 @@ def main():
         reader = csv.DictReader(f)
         for row in reader:
             path.append([int(row["x"]), int(row["y"])])
+
     explored_cells = []
     with open(f"./maze/solution/{solving_algorythm}_explored.csv") as f:
         reader = csv.DictReader(f)
         for row in reader:
             explored_cells.append([int(row["x"]), int(row["y"])])
+    for cell in explored_cells:
+        maze[cell[0]][cell[1]].explored = True
+    show_explored_cells = False
 
     path_step = 0
     path_length = len(path)
@@ -82,23 +102,44 @@ def main():
             if event.type == pg.QUIT:
                 running = False
             if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    running = False
                 if event.key == pg.K_RIGHT:
                     if path_step < path_length - 1:
                         path_step += 1
+                        
                 elif event.key == pg.K_LEFT:
                     if path_step > 0:
-                        path_step -= 1
-                        maze[path[path_step][0]][path[path_step][1]].unmark()
+                        path_step -= 1   
+
+                elif event.key == pg.K_SPACE:
+                    show_explored_cells = show_explored_cells != True
             if path_step == path_length - 1:
-                print("Hey!")
+                pass
         for i in range(SIZEX):
             for j in range(SIZEY):
                 maze[i][j].pixel_cell()
+                try:
+                    cords = [maze[i][j].x, maze[i][j].y]
+                    if path.index(cords) < path_step:
+                        maze[i][j].show_path() 
+                    else:
+                        maze[i][j].hide_path()
+                except ValueError:
+                    pass
+        
+        for cell in explored_cells:
+            if show_explored_cells:
+                maze[cell[0]][cell[1]].show_explored()
+            else:
+                maze[cell[0]][cell[1]].hide_explored()
 
-        maze[path[path_step][0]][path[path_step][1]].mark()
+        maze[path[path_step][0]][path[path_step][1]].mark_current()
+        
                 
         pg.display.flip()
         clock.tick(60)
+    pg.quit()
 
 def load_maze():
     #open data file

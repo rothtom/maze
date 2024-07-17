@@ -19,7 +19,7 @@ class AStarCell(Cell):
         self.explored = False
         self.parent = None
     
-    def calculate_cost(self):
+    def calculate_fcost(self):
         self.cost = self.manhattan_distance + self.path_cost
 
 def main():
@@ -55,6 +55,8 @@ def main():
         explored_cells = path
     elif algorythm == "a_star":
         explored_cells, path = a_star(maze)
+    elif algorythm == "dijkstras":
+        explored_cells, path = dijkstras(maze)
     else:
         sys.exit("Invalid solving algorythm")
     
@@ -115,7 +117,7 @@ def a_star(maze):
             maze[i][j] = AStarCell(maze[i][j])
     cell = maze[0][0]
     cell.path_cost = 10
-    cell.calculate_cost()
+    cell.calculate_fcost()
     explored_cells = [[cell.x, cell.y]]
     considered_cells = [cell]
     while cell.target == False and len(considered_cells) > 0:
@@ -130,7 +132,7 @@ def a_star(maze):
                     continue
             else:
                 neighbor.path_cost = cell.path_cost + 10
-                neighbor.calculate_cost()
+                neighbor.calculate_fcost()
                 neighbor.parent = cell
                 considered_cells.append(neighbor)
         explored_cells.append([cell.x, cell.y])
@@ -155,6 +157,57 @@ def manhattan_distance(cell, target):
         # return 0
     # return (math.sqrt((cost[0] * cost[0]) + (cost[1] * cost[1]))) * 10
     return (cost[0] + cost[1]) * 10
+
+def dijkstras(maze):
+    unvisited = []
+    explored = []
+    for i in range(SIZEX):
+        for j in range(SIZEY):
+            maze[i][j] = AStarCell(maze[i][j])
+            unvisited.append(maze[i][j])
+            explored.append([maze[i][j].x, maze[i][j].y])
+
+    cell = maze[STARTX][STARTY]
+    cell.cost = 0
+    visited = []
+    next_cells = []
+    while len(unvisited) > 1:
+        neighbors = get_connected_cells(maze, cell)
+        for neighbor in neighbors:
+            if neighbor in unvisited:
+                next_cells.append(neighbor)
+            if neighbor.cost != None:
+                if neighbor.cost < cell.cost + 1:
+                    continue
+            neighbor.cost = cell.cost + 1
+            neighbor.parent = cell
+        visited.append(cell)
+        unvisited.remove(cell)
+        cell = sorted(next_cells, key=lambda x: x.cost, reverse=True)[0]
+        next_cells.remove(cell)
+        
+
+
+
+    cell = maze[target[0]][target[1]]
+    path = []
+    while cell.parent != None:
+        path.append([cell.x, cell.y])
+        cell = cell.parent
+    path.append([cell.x, cell.y])
+    path.reverse()
+    return explored, path
+
+
+
+def get_connected_cells(maze, cell):
+    neighbor_cells = []
+    for direction in cell.get_empty_walls():
+        cell_cords = cell.get_cell_in_direction(direction)
+        neighbor_cells.append(maze[cell_cords[0]][cell_cords[1]])
+    return neighbor_cells
+
+
 
 
 
