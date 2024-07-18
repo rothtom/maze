@@ -221,31 +221,50 @@ def dead_end_fill(maze):
             if len(maze[i][j].get_empty_walls()) == 1:
                 dead_ends.append(maze[i][j])
                 maze[i][j].dead_end = True
+    maze[start[0]][start[1]].dead_end = False
+    maze[target[0]][target[1]].dead_end = False
     dead_ends.remove(maze[start[0]][start[1]])
     dead_ends.remove(maze[target[0]][target[1]])
 
     explored = []
-    while len(dead_ends) > 0:
+    possible_dead_ends = []
+    while len(explored) < (SIZEX * SIZEY) - 2 and len(dead_ends) > 0:
         cell = dead_ends[0]
         dead_ends.remove(cell)
-        directions = cell.get_empty_walls()
-        for direction in directions:
-            neighbor_cords = cell.get_cell_in_direction(direction)
-            neighbor = maze[neighbor_cords[0]][neighbor_cords[1]]
-            options = len(neighbor.get_empty_walls())
-            for direction2 in neighbor.get_empty_walls():
-                neighbor2_cords = neighbor.get_cell_in_direction(direction2)
-                neighbor2 = maze[neighbor2_cords[0]][neighbor2_cords[1]]
-                if neighbor2.dead_end:
-                    options -= 1
+        if cell in unvisited:
+            unvisited.remove(cell)
+        for neighbor in get_connected_cells(maze, cell):
+            if neighbor.dead_end == False:
+                neighbors2 = get_connected_cells(maze, neighbor)
+                options = len(neighbors2)
+                for neighbor2 in neighbors2:
+                    if neighbor2.dead_end:
+                        options -= 1
+            
             if options == 1:
-                neighbor.dead_end = True
-                cell = neighbor  
-                if [cell.x, cell.y] not in explored:
-                    dead_ends.append(cell)
-                    explored.append([cell.x, cell.y])
-                    unvisited.remove(cell)
-
+                if neighbor != maze[start[0]][start[1]] and neighbor != maze[target[0]][target[1]]:
+                    if neighbor not in dead_ends:
+                        dead_ends.append(neighbor)
+                        neighbor.dead_end = True
+            else: 
+                if neighbor != maze[start[0]][start[1]] and neighbor != maze[target[0]][target[1]]:
+                    if neighbor not in possible_dead_ends:
+                        possible_dead_ends.append(neighbor)
+        
+        if [cell.x, cell.y] not in explored:
+            explored.append([cell.x, cell.y])
+    cell = maze[start[0]][start[1]]
+    path = [[cell.x, cell.y]]
+    unvisited.remove(cell)
+    while len(unvisited) > 0:
+        neighbors = get_connected_cells(maze, cell)
+        for neighbor in neighbors:
+            if neighbor in unvisited:
+                unvisited.remove(neighbor)
+                cell = neighbor
+                path.append([cell.x, cell.y])
+        
+    return explored, path
             
     cell = maze[start[0]][start[1]]
     path = [[cell.x, cell.y]]
