@@ -166,13 +166,10 @@ def load_maze():
         maze.append([])
         for j in range(SIZEY):
             maze[i].append([])
-    i = 0
-    while os.path.isfile("".join(["maze/recursive/", str(i + 1), ".csv"])):
-        i += 1
 
     #i = 78
     # possibility to show specific image
-    with open(f"maze/{MAZETYPE}/{i}.csv", "r") as f:
+    with open(f"maze/{MAZETYPE}/complete.csv", "r") as f:
         reader = csv.DictReader(f)
         for row in reader:
             maze[int(row["x"])][int(row["y"])] = Cell(row["x"], row["y"], row["wall_n"], row["wall_e"], row["wall_s"], row["wall_w"], row["target"])

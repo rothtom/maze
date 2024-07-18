@@ -3,6 +3,7 @@ import re
 import csv
 import math
 import copy
+import time
 import maze_generator as mg
 from maze_generator import Cell, DIRECTIONS
 from visualizer import load_maze
@@ -52,6 +53,7 @@ def main():
     start = [STARTX, STARTY]
     
     algorythm = clas[-1]
+    start_time = time.time()
     if algorythm == "right_hand":
         path = right_hand(maze)
         explored_cells = path
@@ -63,6 +65,9 @@ def main():
         explored_cells, path = dead_end_fill(maze)
     else:
         sys.exit("Invalid solving algorythm")
+    end_time = time.time()
+    duration = end_time - start_time
+    print(duration)
     
     with open(f"./maze/solution/{clas[-1]}_path.csv", "w") as f:
         writer = csv.DictWriter(f, fieldnames=["x", "y"])

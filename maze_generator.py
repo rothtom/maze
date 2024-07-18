@@ -14,6 +14,9 @@ DIRECTIONS = ["n", "e", "s", "w"]
 START = [0, 0]
 TARGET = [-1, -1]
 # chance mazes target
+
+SAVE_ALL_GEN_STEPS = False
+# option for saving every step in the geneartion
 class Cell():
     def __init__(self, x, y, target=False, start=False):
         self.wall = {"n": False, 
@@ -97,6 +100,7 @@ def main():
     maze[TARGET[0]][TARGET[1]].target = True
     if algorythm == "recursive":
         maze = recursive_init(maze)
+        save(maze, maze[TARGET[0]][TARGET[0]], n="complete")
         return 0
     else:
         sys.exit("invalid generation algorythm")
@@ -142,6 +146,7 @@ def recursive(maze, current_cell, reverse=None):
     if len(reverse_directions) == 0:
         return maze
     recursive(maze, cell, reverse=reverse_directions[0])
+    return maze
 
 def get_neighbors(maze, c, sizey=None, sizex=None):
     # c beeing the cell whos neighbors we observe
@@ -186,28 +191,29 @@ def opposite_direction(d):
     
 
 def save(maze, current_cell, n):
-    with open(f"maze/recursive/{n}.csv", "w") as f:
-        fieldnames = ["x", "y", "wall_n", "wall_e", "wall_s", "wall_w", "empty", "current",  "start", "target",]
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        for j in range(SIZEX):
-            for i in range(SIZEY):
-                if maze[i][j] == current_cell:
-                    current = True
-                else:
-                    current = False
-                writer.writerow({
-                    "x": maze[i][j].x,
-                    "y": maze[i][j].y,
-                    "wall_n": maze[i][j].wall["n"],
-                    "wall_e": maze[i][j].wall["e"],
-                    "wall_s": maze[i][j].wall["s"],
-                    "wall_w": maze[i][j].wall["w"],
-                    "empty": maze[i][j].empty,
-                    "current": current,
-                    "start": maze[i][j].start,
-                    "target": maze[i][j].target,
-                })
+    if SAVE_ALL_GEN_STEPS or n == "complete":
+        with open(f"maze/recursive/{n}.csv", "w") as f:
+            fieldnames = ["x", "y", "wall_n", "wall_e", "wall_s", "wall_w", "empty", "current",  "start", "target",]
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            for j in range(SIZEX):
+                for i in range(SIZEY):
+                    if maze[i][j] == current_cell:
+                        current = True
+                    else:
+                        current = False
+                    writer.writerow({
+                        "x": maze[i][j].x,
+                        "y": maze[i][j].y,
+                        "wall_n": maze[i][j].wall["n"],
+                        "wall_e": maze[i][j].wall["e"],
+                        "wall_s": maze[i][j].wall["s"],
+                        "wall_w": maze[i][j].wall["w"],
+                        "empty": maze[i][j].empty,
+                        "current": current,
+                        "start": maze[i][j].start,
+                        "target": maze[i][j].target,
+                    })
     return 0
 
             
