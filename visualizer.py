@@ -53,7 +53,6 @@ class Cell(Cell):
                 pg.draw.rect(screen, "green", wall[d])
 
     def show_path(self):
-        cell = pg.Rect(self.x * TILE[0] + TILE[0] * 0.1, self.y * TILE[1] + TILE[1] * 0.1, TILE[0] * 0.8, TILE[1] * 0.8)
         self.is_path = True
 
     def hide_path(self):
@@ -156,7 +155,7 @@ def main():
                             else:
                                 maze[i][j].hide_explored()
                         else:
-                            for cords in path:
+                            for cords in explored_cells:
                                 maze[cords[0]][cords[1]].show_explored()
                     except ValueError:
                         pass
