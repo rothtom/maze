@@ -102,6 +102,7 @@ def main():
     path_step = 0
     path_length = len(path)
     show_entire_path = False
+    explored_step = 0
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -119,10 +120,18 @@ def main():
                 
                 elif event.key == pg.K_TAB:
                     show_entire_path = show_entire_path == False
-                        
 
                 elif event.key == pg.K_SPACE:
                     show_explored_cells = show_explored_cells == False
+                    if not show_explored_cells:
+                        explored_step = 0
+                
+                elif event.key == pg.K_a:
+                    if explored_step > 0:
+                        explored_step -= 1
+                elif event.key == pg.K_d:
+                    if explored_step < len(explored_cells) - 1:
+                        explored_step += 1
             if path_step == path_length - 1:
                 pass
         for i in range(SIZEX):
@@ -140,12 +149,18 @@ def main():
                             maze[cords[0]][cords[1]].show_path()
                 except ValueError:
                     pass
-        
-        for cell in explored_cells:
-            if show_explored_cells:
-                maze[cell[0]][cell[1]].show_explored()
-            else:
-                maze[cell[0]][cell[1]].hide_explored()
+                try:
+                    cords = [maze[i][j].x, maze[i][j].y]
+                    if not show_explored_cells:
+                        if explored_cells.index(cords) < explored_step:
+                            maze[i][j].show_explored() 
+                        else:
+                            maze[i][j].hide_explored()
+                    else:
+                        for cords in path:
+                            maze[cords[0]][cords[1]].show_explored()
+                except ValueError:
+                    pass
 
         maze[path[path_step][0]][path[path_step][1]].mark_current()
         
