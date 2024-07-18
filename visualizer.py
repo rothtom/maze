@@ -72,7 +72,11 @@ class Cell(Cell):
 def main():
     if len(sys.argv) > 3:
         sys.exit("invalid clas!")
-    solving_algorythm = sys.argv[1]
+    try:
+        solving_algorythm = sys.argv[1]
+    except IndexError:
+        solving_algorythm = "a_star"
+        # set default solving algorythm if non in clas
     pg.init()
     clock = pg.time.Clock()
     running = True
