@@ -10,6 +10,7 @@ WIDTH= 1280
 HEIGHT = 720
 screen = pg.display.set_mode((WIDTH, HEIGHT))
 MAZETYPE = "recursive"
+pg.display.set_caption(f"Maze solving. Algororithm: A-star")
 # solving_algorythm = "a_star"
 # used to set default. Decides which folder to use (load). Can change this with clas
 SQUARE = False
